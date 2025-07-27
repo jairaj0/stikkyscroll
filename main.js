@@ -4,6 +4,7 @@ const container = document.querySelector('.carousel-container');
 let currentIndex = 0;
 let isLoading = false;
 let isScrolling = false;
+let touchStartY = 0;
 let images = [];
 
 const fetchAnimeImage = async () => {
@@ -59,6 +60,40 @@ const handleWheel = (event) => {
     }, 1000); // Match transition duration
 };
 
+const handleTouchStart = (event) => {
+    touchStartY = event.touches[0].clientY;
+};
+
+const handleTouchMove = (event) => {
+    if (isScrolling) return;
+
+    const touchEndY = event.touches[0].clientY;
+    const deltaY = touchStartY - touchEndY;
+
+    if (deltaY > 50) { // Swipe up
+        if (currentIndex < images.length - 1) {
+            currentIndex++;
+            updateCarousel();
+        }
+        if (currentIndex > images.length - 3) {
+            fetchAnimeImage();
+        }
+        isScrolling = true;
+        setTimeout(() => {
+            isScrolling = false;
+        }, 1000);
+    } else if (deltaY < -50) { // Swipe down
+        if (currentIndex > 0) {
+            currentIndex--;
+            updateCarousel();
+        }
+        isScrolling = true;
+        setTimeout(() => {
+            isScrolling = false;
+        }, 1000);
+    }
+};
+
 const initializeCarousel = async () => {
     for (let i = 0; i < 5; i++) {
         await fetchAnimeImage();
@@ -66,5 +101,7 @@ const initializeCarousel = async () => {
 };
 
 container.addEventListener('wheel', handleWheel);
+container.addEventListener('touchstart', handleTouchStart);
+container.addEventListener('touchmove', handleTouchMove);
 
 initializeCarousel();
